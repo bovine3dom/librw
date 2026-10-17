@@ -75,6 +75,7 @@ struct InstanceData
 struct InstanceDataHeader : rw::InstanceDataHeader
 {
 	uint32      serialNumber;
+	uint64      instanceRevision; // Changes on each upload, including mesh replacement.
 	uint32      numMeshes;
 	uint16     *indexBuffer;
 	uint32      primType;
