@@ -20,6 +20,8 @@ namespace gl3 {
 
 #ifdef RW_OPENGL
 
+static uint64 nextInstanceRevision;
+
 void
 freeInstanceData(Geometry *geometry)
 {
@@ -56,6 +58,7 @@ instanceMesh(rw::ObjPipeline *rwpipe, Geometry *geo)
 	header->platform = PLATFORM_GL3;
 
 	header->serialNumber = meshh->serialNum;
+	header->instanceRevision = ++nextInstanceRevision;
 	header->numMeshes = meshh->numMeshes;
 	header->primType = meshh->flags == 1 ? GL_TRIANGLE_STRIP : GL_TRIANGLES;
 	header->totalNumVertex = geo->numVertices;
@@ -123,8 +126,10 @@ instance(rw::ObjPipeline *rwpipe, Atomic *atomic)
 	if(geo->instData == nil){
 		geo->instData = instanceMesh(rwpipe, geo);
 		pipe->instanceCB(geo, (InstanceDataHeader*)geo->instData, 0);
-	}else if(geo->lockedSinceInst)
+	}else if(geo->lockedSinceInst){
+		((InstanceDataHeader*)geo->instData)->instanceRevision = ++nextInstanceRevision;
 		pipe->instanceCB(geo, (InstanceDataHeader*)geo->instData, 1);
+	}
 
 	geo->lockedSinceInst = 0;
 }
