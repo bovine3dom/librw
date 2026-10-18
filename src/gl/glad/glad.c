@@ -1179,6 +1179,11 @@ int gladLoadGLLoader(GLADloadproc load, int requestedVersion) {
 	load_GL_VERSION_3_1(load);
 	load_GL_VERSION_3_2(load);
 	load_GL_VERSION_3_3(load);
+	if(requestedVersion >= 43 && (GLVersion.major > 4 || (GLVersion.major == 4 && GLVersion.minor >= 3))){
+		glad_glDispatchCompute = (PFNGLDISPATCHCOMPUTEPROC)load("glDispatchCompute");
+		glad_glBindImageTexture = (PFNGLBINDIMAGETEXTUREPROC)load("glBindImageTexture");
+		glad_glMemoryBarrier = (PFNGLMEMORYBARRIERPROC)load("glMemoryBarrier");
+	}
 
 	if (!find_extensionsGL()) return 0;
 	load_GL_EXT_framebuffer_object(load);
