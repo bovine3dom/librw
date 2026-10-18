@@ -1528,7 +1528,6 @@ static struct {
 	int gl;
 	int major, minor;
 } profiles[] = {
-	{ SDL_GL_CONTEXT_PROFILE_CORE, 4, 3 },
 	{ SDL_GL_CONTEXT_PROFILE_CORE, 3, 3 },
 	{ SDL_GL_CONTEXT_PROFILE_CORE, 2, 1 },
 	{ SDL_GL_CONTEXT_PROFILE_ES, 3, 1 },
@@ -1547,9 +1546,8 @@ startSDL2(void)
 
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, glGlobals.numSamples);
 
-	const char *modern = getenv("GENTLE_GL43");
 	int i;
-	for(i = modern && strcmp(modern, "1") == 0 ? 0 : 1; profiles[i].gl; i++){
+	for(i = 0; profiles[i].gl; i++){
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, profiles[i].gl);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, profiles[i].major);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, profiles[i].minor);
@@ -1564,8 +1562,6 @@ startSDL2(void)
 				SDL_SetWindowDisplayMode(win, NULL);
 		}
 		if(win){
-			ctx = SDL_GL_CreateContext(win);
-			if(!ctx){ SDL_DestroyWindow(win); win = nil; continue; }
 			gl3Caps.gles = profiles[i].gl == SDL_GL_CONTEXT_PROFILE_ES;
 			gl3Caps.glversion = profiles[i].major*10 + profiles[i].minor;
 			break;
@@ -1575,6 +1571,7 @@ startSDL2(void)
 		RWERROR((ERR_GENERAL, SDL_GetError()));
 		return 0;
 	}
+	ctx = SDL_GL_CreateContext(win);
 
 	if (!((gl3Caps.gles ? gladLoadGLES2Loader : gladLoadGLLoader) ((GLADloadproc) SDL_GL_GetProcAddress, gl3Caps.glversion)) ) {
 		RWERROR((ERR_GENERAL, "gladLoadGLLoader failed"));
@@ -1694,7 +1691,6 @@ static struct {
 	int gl;
 	int major, minor;
 } profiles[] = {
-	{ GLFW_OPENGL_API, 4, 3 },
 	{ GLFW_OPENGL_API, 3, 3 },
 	{ GLFW_OPENGL_API, 2, 1 },
 	{ GLFW_OPENGL_ES_API, 3, 1 },
@@ -1721,9 +1717,8 @@ startGLFW(void)
 	if (glGlobals.numSamples > 1)
 		glfwWindowHint(GLFW_SAMPLES, glGlobals.numSamples);
 
-	const char *modern = getenv("GENTLE_GL43");
 	int i;
-	for(i = modern && strcmp(modern, "1") == 0 ? 0 : 1; profiles[i].gl; i++){
+	for(i = 0; profiles[i].gl; i++){
 		glfwWindowHint(GLFW_CLIENT_API, profiles[i].gl);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, profiles[i].major);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, profiles[i].minor);
