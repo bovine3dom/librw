@@ -43,7 +43,6 @@ int32 findBlock(const char *name);
 
 void setUniform(int32 id, void *data);
 void flushUniforms(void);
-extern bool compactUniforms;
 
 extern UniformRegistry uniformRegistry;
 
@@ -54,8 +53,6 @@ struct Shader
 	GLint *uniformLocations;
 	uint32 *serialNums;
 	int32 numUniforms;	// just to be sure!
-	int32 *activeUniforms;
-	int32 numActiveUniforms;
 
 	static Shader *create(const char **vsrc, const char **fsrc);
 //	static Shader *fromFiles(const char *vs, const char *fs);
