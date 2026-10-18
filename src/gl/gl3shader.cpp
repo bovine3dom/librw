@@ -118,24 +118,19 @@ setUniform(int32 id, void *data)
 	}
 }
 
-bool compactUniforms = [] {
-	const char *value = getenv("GENTLE_GL_ACTIVE_UNIFORMS");
-	return value && strcmp(value, "1") == 0;
-}();
-
 void
 flushUniforms(void)
 {
-	auto upload = [](int i){
+	for(int i = 0; i < uniformRegistry.numUniforms; i++){
 		// this is bad!
 		if(i >= currentShader->numUniforms){
 			printf("trying to set uniform %d %s that doesn't exist!\n", i, uniformRegistry.uniforms[i].name);
-			return;
+			continue;
 		}
 
 		int32 loc = currentShader->uniformLocations[i];
 		if(loc == -1)
-			return;
+			continue;
 
 		Uniform *u = &uniformRegistry.uniforms[i];
 		if(currentShader->serialNums[i] != u->serialNum)
@@ -153,15 +148,7 @@ flushUniforms(void)
 				break;
 			}
 		currentShader->serialNums[i] = u->serialNum;
-	};
-	if(compactUniforms){
-		for(int n = 0; n < currentShader->numActiveUniforms; ++n)
-			upload(currentShader->activeUniforms[n]);
-		// Keep the diagnostic for uniforms registered after shader creation.
-		for(int i = currentShader->numUniforms; i < uniformRegistry.numUniforms; ++i)
-			upload(i);
-	}else
-		for(int i = 0; i < uniformRegistry.numUniforms; ++i) upload(i);
+	}
 }
 
 Shader *currentShader;
@@ -317,8 +304,6 @@ Shader::create(const char **vsrc, const char **fsrc)
 	}
 
 	// query uniform locations
-	sh->numActiveUniforms = 0;
-	sh->activeUniforms = rwNewT(int32, uniformRegistry.numUniforms, MEMDUR_EVENT | ID_DRIVER);
 	sh->program = program;
 	sh->numUniforms = uniformRegistry.numUniforms;
 	sh->uniformLocations = rwNewT(GLint, uniformRegistry.numUniforms, MEMDUR_EVENT | ID_DRIVER);
@@ -326,7 +311,6 @@ Shader::create(const char **vsrc, const char **fsrc)
 	for(i = 0; i < uniformRegistry.numUniforms; i++){
 		sh->uniformLocations[i] = glGetUniformLocation(program,
 			uniformRegistry.uniforms[i].name);
-		if(sh->uniformLocations[i] >= 0) sh->activeUniforms[sh->numActiveUniforms++] = i;
 		sh->serialNums[i] = ~0;	// let's hope this means dirty
 	}
 
@@ -362,7 +346,6 @@ Shader::destroy(void)
 	glDeleteProgram(this->program);
 	rwFree(this->uniformLocations);
 	rwFree(this->serialNums);
-	rwFree(this->activeUniforms);
 	rwFree(this);
 }
 
