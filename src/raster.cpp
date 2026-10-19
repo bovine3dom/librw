@@ -54,6 +54,8 @@ Raster::registerModule(void)
 	Engine::registerPlugin(sizeof(RasterGlobals), ID_RASTERMODULE, rasterOpen, rasterClose);
 }
 
+static uint64 nextRasterRevision;
+
 Raster*
 Raster::create(int32 width, int32 height, int32 depth, int32 format, int32 platform)
 {
@@ -61,6 +63,7 @@ Raster::create(int32 width, int32 height, int32 depth, int32 format, int32 platf
 	Raster *raster = (Raster*)rwMalloc(s_plglist.size, MEMDUR_EVENT);	// TODO
 	assert(raster != nil);
 	numAllocated++;
+	raster->contentRevision = ++nextRasterRevision;
 	raster->parent = raster;
 	raster->offsetX = 0;
 	raster->offsetY = 0;
@@ -90,6 +93,7 @@ Raster::subRaster(Raster *parent, Rect *r)
 	this->offsetX = parent->offsetX + r->x;
 	this->offsetY = parent->offsetY + r->y;
 	this->parent = parent->parent;
+	this->contentRevision = ++nextRasterRevision;
 }
 
 void
@@ -110,6 +114,7 @@ void
 Raster::unlock(int32 level)
 {
 	engine->driver[this->platform]->rasterUnlock(this, level);
+	this->contentRevision = ++nextRasterRevision;
 }
 
 uint8*
@@ -122,6 +127,7 @@ void
 Raster::unlockPalette(void)
 {
 	engine->driver[this->platform]->rasterUnlockPalette(this);
+	this->contentRevision = ++nextRasterRevision;
 }
 
 int32
@@ -160,6 +166,7 @@ Raster::imageFindRasterFormat(Image *image, int32 type,
 Raster*
 Raster::setFromImage(Image *image, int32 platform)
 {
+	this->contentRevision = ++nextRasterRevision;
 	if(engine->driver[platform ? platform : rw::platform]->rasterFromImage(this, image))
 		return this;
 	return nil;
