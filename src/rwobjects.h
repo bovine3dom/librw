@@ -233,6 +233,7 @@ struct Raster
 	int32 stride;
 	uint8 *pixels;
 	uint8 *palette;
+	uint64 contentRevision; // Changes on creation and CPU uploads; not a render-target generation.
 	// remember for locked rasters
 	uint8 *originalPixels;
 	int32 originalWidth;
