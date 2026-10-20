@@ -826,6 +826,8 @@ destroyNativeRaster(void *object, int32 offset, int32)
 	Raster *raster = (Raster*)object;
 	Gl3Raster *natras = PLUGINOFFSET(Gl3Raster, object, offset);
 #ifdef RW_OPENGL
+	if(raster->platform != PLATFORM_GL3)
+		return object;
 	evictRaster(raster);
 	switch(raster->type){
 	case Raster::NORMAL:
