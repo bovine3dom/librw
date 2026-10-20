@@ -243,7 +243,7 @@ Engine::init(MemoryFunctions *memfuncs)
 
 // This is where RW allocates the engine and e.g. opens d3d
 bool32
-Engine::open(EngineOpenParams *p)
+Engine::open(EngineOpenParams *p, const Device *deviceOverride, uint32 driverMask)
 {
 	if(engine || Engine::state != Initialized){
 		RWERROR((ERR_ENGINEOPEN));
@@ -254,6 +254,7 @@ Engine::open(EngineOpenParams *p)
 	engine = (Engine*)rwNew(Engine::s_plglist.size, MEMDUR_GLOBAL);
 	engine->currentCamera = nil;
 	engine->currentWorld = nil;
+	engine->driverMask = driverMask;
 	engine->filefuncs.rwfopen = (void *(*)(const char*, const char*))fopen;
 	engine->filefuncs.rwfclose = (int (*)(void*))fclose;
 	engine->filefuncs.rwfseek = (int (*)(void*, long, int))fseek;
@@ -274,7 +275,13 @@ Engine::open(EngineOpenParams *p)
 	engine->device = null::renderdevice;
 #endif
 
-	engine->device.system(DEVICEOPEN, (void*)p, 0);
+	if(deviceOverride)
+		engine->device = *deviceOverride;
+	if(!engine->device.system(DEVICEOPEN, (void*)p, 0)){
+		rwFree(engine);
+		engine = nil;
+		return 0;
+	}
 
 	engine->dummyDefaultPipeline = ObjPipeline::create();
 	for(uint i = 0; i < NUM_PLATFORMS; i++){
@@ -308,13 +315,19 @@ Engine::start(void)
 		return 0;
 	}
 
-	engine->device.system(DEVICEINIT, nil, 0);
+	if(!engine->device.system(DEVICEINIT, nil, 0))
+		return 0;
 
 	Engine::s_plglist.construct(engine);
 	for(uint i = 0; i < NUM_PLATFORMS; i++)
-		Driver::s_plglist[i].construct(rw::engine->driver[i]);
+		if(engine->driverMask & (1u << i))
+			Driver::s_plglist[i].construct(rw::engine->driver[i]);
 
-	engine->device.system(DEVICEFINALIZE, nil, 0);
+	if(!engine->device.system(DEVICEFINALIZE, nil, 0)){
+		Engine::state = Started;
+		Engine::stop();
+		return 0;
+	}
 
 	// Register some image formats. Or should we leave that to the user?
 	Image::registerFileFormat("tga", readTGA, writeTGA);
@@ -368,7 +381,8 @@ Engine::stop(void)
 	}
 
 	for(uint i = 0; i < NUM_PLATFORMS; i++)
-		Driver::s_plglist[i].destruct(rw::engine->driver[i]);
+		if(engine->driverMask & (1u << i))
+			Driver::s_plglist[i].destruct(rw::engine->driver[i]);
 	Engine::s_plglist.destruct(engine);
 
 	engine->device.system(DEVICETERM, nil, 0);

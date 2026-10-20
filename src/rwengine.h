@@ -171,6 +171,7 @@ struct Engine
 	// Dynamically allocated because of plugins
 	Driver *driver[NUM_PLATFORMS];
 	Device device;
+	uint32 driverMask;
 	ObjPipeline *dummyDefaultPipeline;
 
 	// These must always be available
@@ -178,7 +179,9 @@ struct Engine
 	static State state;
 
 	static bool32 init(MemoryFunctions *memfuncs = nil);
-	static bool32 open(EngineOpenParams*);
+	// Select an external rendering device before any device initialization.
+	// The mask selects driver plugin constructors and destructors.
+	static bool32 open(EngineOpenParams*, const Device *deviceOverride = nil, uint32 driverMask = ~0u);
 	static bool32 start(void);
 	static void term(void);
 	static void close(void);
