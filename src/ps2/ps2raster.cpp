@@ -1763,7 +1763,8 @@ rasterToImage(Raster *raster)
 	transferMinSize(depth == 4 ? PSMT4 : PSMT8, natras->flags, &minw, &minh);
 	tw = max(raster->width, minw);
 	uint8 *dst = image->pixels;
-	in = raster->lock(0, Raster::LOCKREAD);
+	bool unlock = (raster->privateFlags & (Raster::PRIVATELOCK_READ | Raster::PRIVATELOCK_WRITE)) == 0;
+	in = unlock ? raster->lock(0, Raster::LOCKREAD) : raster->pixels;
 	if(depth == 4){
 		expandPal4(dst, image->stride, in, tw/2, raster->width, raster->height);
 	}else if(depth == 8){
@@ -1804,7 +1805,8 @@ rasterToImage(Raster *raster)
 			dst += image->stride;
 		}
 	}
-	raster->unlock(0);
+	if(unlock)
+		raster->unlock(0);
 
 	return image;
 }
