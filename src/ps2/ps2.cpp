@@ -62,6 +62,26 @@ registerPlatformPlugins(void)
 ObjPipeline *defaultObjPipe;
 MatPipeline *defaultMatPipe;
 
+// Public caches and Driver::defaultPipeline are aliases, not ownership records.
+static ObjPipeline *stockDefaultObjPipeline;
+static MatPipeline *stockDefaultMatPipeline;
+
+void
+destroyDefaultPipeline(void)
+{
+	if(defaultObjPipe == stockDefaultObjPipeline)
+		defaultObjPipe = nil;
+	if(defaultMatPipe == stockDefaultMatPipeline)
+		defaultMatPipe = nil;
+	if(stockDefaultObjPipeline)
+		stockDefaultObjPipeline->destroy();
+	if(stockDefaultMatPipeline)
+		stockDefaultMatPipeline->destroy();
+	stockDefaultObjPipeline = nil;
+	stockDefaultMatPipeline = nil;
+	engine->driver[PLATFORM_PS2]->defaultPipeline = engine->dummyDefaultPipeline;
+}
+
 void*
 destroyNativeData(void *object, int32, int32)
 {
@@ -1121,6 +1141,7 @@ ObjPipeline*
 makeDefaultPipeline(void)
 {
 	if(defaultMatPipe == nil){
+		assert(stockDefaultMatPipeline == nil);
 		MatPipeline *pipe = MatPipeline::create();
 		pipe->attribs[AT_XYZ] = &attribXYZ;
 		pipe->attribs[AT_UV] = &attribUV;
@@ -1130,12 +1151,13 @@ makeDefaultPipeline(void)
 		pipe->setTriBufferSizes(4, vertCount);
 		pipe->vifOffset = pipe->inputStride*vertCount;
 		pipe->uninstanceCB = genericUninstanceCB;
-		defaultMatPipe = pipe;
+		stockDefaultMatPipeline = defaultMatPipe = pipe;
 	}
 
 	if(defaultObjPipe == nil){
+		assert(stockDefaultObjPipeline == nil);
 		ObjPipeline *opipe = ObjPipeline::create();
-		defaultObjPipe = opipe;
+		stockDefaultObjPipeline = defaultObjPipe = opipe;
 	}
 	return defaultObjPipe;
 }

@@ -201,6 +201,8 @@ void skinInstanceCB(MatPipeline *, Geometry *g, Mesh *m, uint8 **data);
 //void skinUninstanceCB(MatPipeline*, Geometry *geo, uint32 flags[], Mesh *mesh, uint8 *data[]);
 
 ObjPipeline *makeDefaultPipeline(void);
+// Engine teardown only, after DEVICETERM. Never owns a replacement default.
+void destroyDefaultPipeline(void);
 void dumpPipeline(rw::Pipeline *pipe);
 
 // ADC plugin

@@ -436,7 +436,13 @@ uvanimOpen(void *object, int32 offset, int32 size)
 	registerUVAnimInterpolator();
 	return object;
 }
-static void *uvanimClose(void *object, int32 offset, int32 size) { return object; }
+static void*
+uvanimClose(void *object, int32 offset, int32 size)
+{
+	AnimInterpolatorInfo::unregisterInterp(AnimInterpolatorInfo::find(0x1C0));
+	AnimInterpolatorInfo::unregisterInterp(AnimInterpolatorInfo::find(0x1C1));
+	return object;
+}
 
 void
 registerUVAnimPlugin(void)

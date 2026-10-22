@@ -29,13 +29,18 @@ static VertexElement _d3ddec_end = {0xFF,0,D3DDECLTYPE_UNUSED,0,0,0};
 
 #define NUMDECLELT 12
 
+// Retain ownership independently of the publicly replaceable default slot.
+static ObjPipeline *stockDefaultPipeline;
+
 static void*
 driverOpen(void *o, int32, int32)
 {
 #ifdef RW_D3D9
 	createDefaultShaders();
 #endif
-	engine->driver[PLATFORM_D3D9]->defaultPipeline = makeDefaultPipeline();
+	assert(stockDefaultPipeline == nil);
+	stockDefaultPipeline = makeDefaultPipeline();
+	engine->driver[PLATFORM_D3D9]->defaultPipeline = stockDefaultPipeline;
 
 	engine->driver[PLATFORM_D3D9]->rasterNativeOffset = nativeRasterOffset;
 	engine->driver[PLATFORM_D3D9]->rasterCreate       = rasterCreate;
@@ -55,6 +60,15 @@ driverClose(void *o, int32, int32)
 	destroyDefaultShaders();
 #endif
 	return o;
+}
+
+void
+destroyDefaultPipeline(void)
+{
+	if(stockDefaultPipeline)
+		stockDefaultPipeline->destroy();
+	stockDefaultPipeline = nil;
+	engine->driver[PLATFORM_D3D9]->defaultPipeline = engine->dummyDefaultPipeline;
 }
 
 void

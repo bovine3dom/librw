@@ -58,6 +58,8 @@ public:
 };
 
 ObjPipeline *makeDefaultPipeline(void);
+// Engine teardown only, after DEVICETERM. Never owns a replacement default.
+void destroyDefaultPipeline(void);
 
 // Skin plugin
 

@@ -87,6 +87,8 @@ void defaultRenderCB_Fix(Atomic *atomic, InstanceDataHeader *header);
 void defaultRenderCB_Shader(Atomic *atomic, InstanceDataHeader *header);
 
 ObjPipeline *makeDefaultPipeline(void);
+// Engine teardown only, after DEVICETERM. Never owns a replacement default.
+void destroyDefaultPipeline(void);
 
 
 // Skin plugin

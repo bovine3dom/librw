@@ -81,6 +81,7 @@ Frame::destroyHierarchy(void)
 	if(this->object.privateFlags & Frame::HIERARCHYSYNC)
 		this->inDirtyList.remove();
 	rwFree(this);
+	numAllocated--;
 }
 
 Frame*

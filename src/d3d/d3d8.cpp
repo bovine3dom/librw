@@ -21,10 +21,15 @@ namespace rw {
 namespace d3d8 {
 using namespace d3d;
 
+// Retain ownership independently of the publicly replaceable default slot.
+static ObjPipeline *stockDefaultPipeline;
+
 static void*
 driverOpen(void *o, int32, int32)
 {
-	engine->driver[PLATFORM_D3D8]->defaultPipeline = makeDefaultPipeline();
+	assert(stockDefaultPipeline == nil);
+	stockDefaultPipeline = makeDefaultPipeline();
+	engine->driver[PLATFORM_D3D8]->defaultPipeline = stockDefaultPipeline;
 
 	engine->driver[PLATFORM_D3D8]->rasterNativeOffset = nativeRasterOffset;
 	engine->driver[PLATFORM_D3D8]->rasterCreate       = rasterCreate;
@@ -41,6 +46,15 @@ static void*
 driverClose(void *o, int32, int32)
 {
 	return o;
+}
+
+void
+destroyDefaultPipeline(void)
+{
+	if(stockDefaultPipeline)
+		stockDefaultPipeline->destroy();
+	stockDefaultPipeline = nil;
+	engine->driver[PLATFORM_D3D8]->defaultPipeline = engine->dummyDefaultPipeline;
 }
 
 void

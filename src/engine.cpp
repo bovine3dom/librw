@@ -387,6 +387,20 @@ Engine::stop(void)
 
 	engine->device.system(DEVICETERM, nil, 0);
 
+	// Device termination may restore or leave borrowed replacement defaults.
+	// Reclaim only retained stock allocations, never the current public slots.
+	// GL3 is deliberately outside this five-platform lifecycle cleanup.
+	if(engine->driverMask & (1u << PLATFORM_D3D8))
+		d3d8::destroyDefaultPipeline();
+	if(engine->driverMask & (1u << PLATFORM_D3D9))
+		d3d9::destroyDefaultPipeline();
+	if(engine->driverMask & (1u << PLATFORM_XBOX))
+		xbox::destroyDefaultPipeline();
+	if(engine->driverMask & (1u << PLATFORM_WDGL))
+		wdgl::destroyDefaultPipeline();
+	if(engine->driverMask & (1u << PLATFORM_PS2))
+		ps2::destroyDefaultPipeline();
+
 	Engine::state = Opened;
 }
 

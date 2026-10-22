@@ -22,10 +22,15 @@
 namespace rw {
 namespace wdgl {
 
+// Retain ownership independently of the publicly replaceable default slot.
+static ObjPipeline *stockDefaultPipeline;
+
 static void*
 driverOpen(void *o, int32, int32)
 {
-	engine->driver[PLATFORM_WDGL]->defaultPipeline = makeDefaultPipeline();
+	assert(stockDefaultPipeline == nil);
+	stockDefaultPipeline = makeDefaultPipeline();
+	engine->driver[PLATFORM_WDGL]->defaultPipeline = stockDefaultPipeline;
 	return o;
 }
 
@@ -33,6 +38,15 @@ static void*
 driverClose(void *o, int32, int32)
 {
 	return o;
+}
+
+void
+destroyDefaultPipeline(void)
+{
+	if(stockDefaultPipeline)
+		stockDefaultPipeline->destroy();
+	stockDefaultPipeline = nil;
+	engine->driver[PLATFORM_WDGL]->defaultPipeline = engine->dummyDefaultPipeline;
 }
 
 void
